@@ -9,44 +9,51 @@ namespace windows_search
         /// <param name="fileTable">A dictornary with filenames and corresponding paths</param>
         public static void Run(Dictionary<string, List<string>> fileTable)
         {
-            string? input = "";
             List<Result> lastResult = [];
+            bool running = true;
 
-            while (input != "exit")
+            while (running)
             {
-                Console.WriteLine("\nEnter file name to search, open <filename> or 'exit' to quit:");
-                input = Console.ReadLine()?.Trim().ToLowerInvariant();
-                string[] splitInput = input.Split(" ");
+                Console.WriteLine("Enter file name to search or 'exit' to quit: ");
+                Console.Write("> ");
+                string? input = Console.ReadLine()?.Trim().ToLowerInvariant();
 
-                if (string.IsNullOrEmpty(input))
+                switch (input)
                 {
-                    Console.WriteLine("Invalid input.");
-                    continue;
+                    case var s when string.IsNullOrEmpty(s):
+                        Print(["Invalid input."]);
+                        continue;
+                    case "help":
+                        Help();
+                        continue;
+                    case "exit":
+                        Print(["Exiting..."]);
+                        running = false;
+                        break;
                 }
 
-                if (input == "exit")
+                if (running) 
                 {
-                    break;
-                }
+                    string[] splitInput = input.Split(" ");
 
-                if (splitInput[0] == "open")
-                {
-                    Open(lastResult, splitInput);
-                    continue;
-                }
+                    if (splitInput[0] == "open")
+                    {
+                        Open(lastResult, splitInput);
+                        continue;
+                    }
 
-                var results = FileHandler.FindFiles(fileTable, input);
-                lastResult = results;
+                    var results = FileHandler.FindFiles(fileTable, input);
+                    lastResult = results;
 
-                if (results.Count == 0)
-                {
-                    Console.WriteLine("No similar file names found.");
+                    if (results.Count == 0)
+                    {
+                        Print(["No similar file names found."]);
+                    }
+                    else
+                    {
+                        DisplayResults(results);
+                    }
                 }
-                else
-                {
-                    DisplayResults(results);
-                }
-
             }
         }
 
@@ -54,13 +61,13 @@ namespace windows_search
         {
             if (lastResult.Count == 0)
             {
-                Console.WriteLine("\nPlease search before trying to open a file.");
+                Print(["Please search before trying to open a file."]);
                 return;
             }
 
             if (splitInput.Length < 2)
             {
-                Console.WriteLine("\nPlease specify the file name to open.");
+                Print(["Please specify the file name to open."]);
                 DisplayResults(lastResult);
                 return;
             }
@@ -70,24 +77,52 @@ namespace windows_search
                 if (result.Name.Equals(splitInput[1], StringComparison.InvariantCultureIgnoreCase))
                 {
                     FileHandler.OpenFile(result);
-                    Console.WriteLine("\nFile opened");
+                    Print(["File / directory opened"]);
                     return;
                 }
             }
 
-            Console.WriteLine($"\nNo file or directory found named {splitInput[1] ?? ""}.");
+            Print([$"No file or directory found named {splitInput[1]}."], new PrintOption{ top = true, bottom = false});
             DisplayResults(lastResult);
+        }
+
+        private static void Help() 
+        {
+            Print([
+                "- '<filename>'       |  Will fuzzy search for filenames simulare to the input",
+                "- 'Open <filename>'  |  Will open the specified file or directory",
+                "- 'Exit'             |  Exits the program",
+                "- 'Help'             |  Opens this promt"
+            ]);
         }
 
         private static void DisplayResults(List<Result> results)
         {
-            Console.WriteLine($"\n{new string('=', 50)}\n");
+            Console.WriteLine(DefaultStrings.separator);
             Console.WriteLine("Files:");
             foreach (Result result in results)
             {
                 FileHandler.DisplayResults(result);
             }
-            Console.WriteLine($"\n{new string('=', 50)}");
+            Console.WriteLine(DefaultStrings.separator);
+        }
+
+        private static void Print(List<string> list, PrintOption? option = null)
+        {
+            if (!option.HasValue || option.Value.top)
+            {
+                Console.WriteLine(DefaultStrings.separator);
+            }
+
+            foreach (var str in list) 
+            {
+                Console.WriteLine(str);
+            }
+
+            if (!option.HasValue || option.Value.bottom)
+            {
+                Console.WriteLine(DefaultStrings.separator);
+            }
         }
     }
 }

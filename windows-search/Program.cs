@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics;
 using windows_search;
 
-Console.WriteLine($"{new string('=', 50)}\n");
+Console.WriteLine(DefaultStrings.separator);
 Console.WriteLine("Starting to get files...");
 var stopwatch = Stopwatch.StartNew();
 
@@ -13,13 +13,14 @@ if (fileTable == null || fileTable.Count == 0)
     Console.WriteLine("No files found.");
     return;
 }
-
-Console.WriteLine($"total filenames added to dict: {fileTable.Count}");
-MemoryEstimator.EstimateDictionarySize(fileTable);
+else
+{
+    Console.WriteLine($"total filenames added to dict: {fileTable.Count}");
+    MemoryEstimator.EstimateDictionarySize(fileTable);
+}
 
 stopwatch.Stop();
 Console.WriteLine($"Elapsed time: {stopwatch.Elapsed}");
-Console.WriteLine($"\n{new string('=', 50)}");
+Console.WriteLine(DefaultStrings.separator);
 
-var program = new SearchLoop();
 SearchLoop.Run(fileTable);
